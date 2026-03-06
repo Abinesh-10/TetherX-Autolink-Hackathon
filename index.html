@@ -1,0 +1,71 @@
+
+export const getMean = (values: number[]): number => {
+  if (values.length === 0) return 0;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+};
+
+export const getStdDev = (values: number[], mean?: number): number => {
+  if (values.length <= 1) return 0;
+  const m = mean ?? getMean(values);
+  const variance = values.reduce((a, b) => a + Math.pow(b - m, 2), 0) / (values.length - 1);
+  return Math.sqrt(variance);
+};
+
+export const getMedian = (values: number[]): number => {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+
+export const getQuartiles = (values: number[]): { q1: number; q3: number } => {
+  if (values.length === 0) return { q1: 0, q3: 0 };
+  const sorted = [...values].sort((a, b) => a - b);
+  const q1Pos = (sorted.length - 1) * 0.25;
+  const q3Pos = (sorted.length - 1) * 0.75;
+  
+  const getInterpolated = (pos: number) => {
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    if (sorted[base + 1] !== undefined) {
+      return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
+    }
+    return sorted[base];
+  };
+
+  return { q1: getInterpolated(q1Pos), q3: getInterpolated(q3Pos) };
+};
+
+export const calculateCorrelation = (x: number[], y: number[]): number => {
+  const n = Math.min(x.length, y.length);
+  if (n === 0) return 0;
+  const meanX = getMean(x);
+  const meanY = getMean(y);
+  let num = 0;
+  let denX = 0;
+  let denY = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - meanX;
+    const dy = y[i] - meanY;
+    num += dx * dy;
+    denX += dx * dx;
+    denY += dy * dy;
+  }
+  const den = Math.sqrt(denX * denY);
+  return den === 0 ? 0 : num / den;
+};
+
+export const simpleLinearRegression = (x: number[], y: number[]) => {
+  const n = x.length;
+  const meanX = getMean(x);
+  const meanY = getMean(y);
+  let ssxx = 0;
+  let ssxy = 0;
+  for (let i = 0; i < n; i++) {
+    ssxx += (x[i] - meanX) ** 2;
+    ssxy += (x[i] - meanX) * (y[i] - meanY);
+  }
+  const slope = ssxy / ssxx;
+  const intercept = meanY - slope * meanX;
+  return { slope, intercept };
+};
